@@ -166,7 +166,7 @@ public class DeviceScanActivity extends ListActivity {
                 public void run() {
                     mScanning = false;
                     mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                    invalidateOptionsMenu();
+                    //invalidateOptionsMenu();
                 }
             }, SCAN_PERIOD);
 
@@ -176,7 +176,7 @@ public class DeviceScanActivity extends ListActivity {
             mScanning = false;
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
-        invalidateOptionsMenu();
+        //invalidateOptionsMenu();
     }
 
     // Adapter for holding devices found through scanning.
