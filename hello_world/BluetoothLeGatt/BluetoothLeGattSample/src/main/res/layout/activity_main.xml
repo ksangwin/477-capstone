@@ -13,24 +13,30 @@
   See the License for the specific language governing permissions and
   limitations under the License.
   -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_screen"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <LinearLayout style="@style/Widget.SampleMessageTile"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  android:orientation="vertical">
-
-        <TextView style="@style/Widget.SampleMessage"
+        <Spinner
+            android:id="@+id/list_dropdown"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/horizontal_page_margin"
-            android:layout_marginRight="@dimen/horizontal_page_margin"
-            android:layout_marginTop="@dimen/vertical_page_margin"
-            android:layout_marginBottom="@dimen/vertical_page_margin"
-            android:text="@string/intro_message" />
-    </LinearLayout>
+            android:text="@string/spin_string"
+            android:padding="10dp" />
+
+        <TextView
+            android:id="@+id/selection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textAppearance="?android:attr/textAppearanceMedium" 
+            android:padding="10dp"/>
+
+        <ListView android:id="@android:id/list" 
+            android:layout_height="wrap_content"
+			android:layout_width="match_parent" />
+
 </LinearLayout>

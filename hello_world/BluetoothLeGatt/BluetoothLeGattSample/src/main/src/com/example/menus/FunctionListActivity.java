@@ -66,7 +66,7 @@ public class FunctionListActivity extends Activity
     public void onItemSelected(int id) {
     	
     	Log.d(TAG, "onItemSelected()");
-    	
+    	/*
         if (mTwoPane) {
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a
@@ -79,7 +79,7 @@ public class FunctionListActivity extends Activity
                     .replace(R.id.function_detail_container, fragment)
                     .commit();
 
-        } else {
+        } else */ {
             // In single-pane mode, simply start the detail activity
             // for the selected item ID.
             //Intent detailIntent = new Intent(this, FunctionDetailActivity.class);

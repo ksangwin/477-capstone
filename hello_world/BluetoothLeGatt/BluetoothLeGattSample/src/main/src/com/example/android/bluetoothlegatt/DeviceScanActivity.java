@@ -26,13 +26,17 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,11 +45,17 @@ import java.util.ArrayList;
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
-public class DeviceScanActivity extends ListActivity {
-    private LeDeviceListAdapter mLeDeviceListAdapter;
+public class DeviceScanActivity extends ListActivity implements  AdapterView.OnItemSelectedListener{
+	
+	private final static String TAG = DeviceScanActivity.class.getSimpleName();
+	private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
+    
+    TextView selection;
+    //Spinner search_list;
+    String[] list_names = { "work", "roadtrip", "sports" };
 
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
@@ -53,9 +63,19 @@ public class DeviceScanActivity extends ListActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	
+    	Log.d(TAG, "onCreate()");
+    	
         super.onCreate(savedInstanceState);
+        
+        Log.d(TAG, "attempting to setContentView... please?");
+        setContentView(R.layout.activity_main);
+        
+        Log.d(TAG, "why do I even bother...");
         getActionBar().setTitle(R.string.title_devices);
         mHandler = new Handler();
+        
+        
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
@@ -76,7 +96,49 @@ public class DeviceScanActivity extends ListActivity {
             finish();
             return;
         }
+        
+        selection = (TextView) findViewById(R.id.selection);
+        
+        Log.d(TAG, "initializing the spinner");
+        // making a spinner
+        Spinner search_list = (Spinner) findViewById(R.id.list_dropdown);
+       
+        Log.d(TAG, "creating the spinner adapter");
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item, list_names);
+        
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        
+        Log.d(TAG, "attatching the adapter");
+        // Apply the adapter to the spinner
+        search_list.setAdapter(adapter);
+        
+        Log.d(TAG, "attaching the callback");
+        
+        
+        search_list.setOnItemSelectedListener(this);
+        
+        
     }
+    
+    
+    public void onItemSelected(AdapterView<?> parent, View view, 
+            int pos, long id) {
+    	Log.d(TAG, "a thing was selected!");
+        // An item was selected. You can retrieve the selected item using
+        // parent.getItemAtPosition(pos)	
+    	selection.setText("Scanning list: " + list_names[pos]);
+    }
+    
+    
+
+    public void onNothingSelected(AdapterView<?> parent) {
+        // Another interface callback
+    	selection.setText("");
+    }
+    
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -176,7 +238,7 @@ public class DeviceScanActivity extends ListActivity {
             mScanning = false;
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
-        //invalidateOptionsMenu();
+        invalidateOptionsMenu();
     }
 
     // Adapter for holding devices found through scanning.

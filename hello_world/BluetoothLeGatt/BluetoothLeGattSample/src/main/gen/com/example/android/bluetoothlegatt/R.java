@@ -29,22 +29,32 @@ public final class R {
         public static final int tile=0x7f020001;
     }
     public static final class id {
-        public static final int connection_state=0x7f080001;
-        public static final int data_value=0x7f080002;
-        public static final int device_address=0x7f080000;
-        public static final int device_name=0x7f080004;
-        public static final int gatt_services_list=0x7f080003;
-        public static final int menu_connect=0x7f080006;
-        public static final int menu_disconnect=0x7f080007;
-        public static final int menu_refresh=0x7f080005;
-        public static final int menu_scan=0x7f080008;
-        public static final int menu_stop=0x7f080009;
+        public static final int connection_state=0x7f080007;
+        public static final int data_value=0x7f080008;
+        public static final int device_address=0x7f080006;
+        public static final int device_name=0x7f08000a;
+        public static final int function_detail=0x7f080005;
+        public static final int function_detail_container=0x7f080000;
+        public static final int function_list=0x7f080001;
+        public static final int gatt_services_list=0x7f080009;
+        public static final int list_dropdown=0x7f080003;
+        public static final int main_screen=0x7f080002;
+        public static final int menu_connect=0x7f08000c;
+        public static final int menu_disconnect=0x7f08000d;
+        public static final int menu_refresh=0x7f08000b;
+        public static final int menu_scan=0x7f08000e;
+        public static final int menu_stop=0x7f08000f;
+        public static final int selection=0x7f080004;
     }
     public static final class layout {
         public static final int actionbar_indeterminate_progress=0x7f030000;
-        public static final int activity_main=0x7f030001;
-        public static final int gatt_services_characteristics=0x7f030002;
-        public static final int listitem_device=0x7f030003;
+        public static final int activity_function_detail=0x7f030001;
+        public static final int activity_function_list=0x7f030002;
+        public static final int activity_function_twopane=0x7f030003;
+        public static final int activity_main=0x7f030004;
+        public static final int fragment_function_detail=0x7f030005;
+        public static final int gatt_services_characteristics=0x7f030006;
+        public static final int listitem_device=0x7f030007;
     }
     public static final class menu {
         public static final int gatt_services=0x7f070000;
@@ -62,15 +72,16 @@ public final class R {
         public static final int label_state=0x7f040005;
         /**  Menu items 
          */
-        public static final int menu_connect=0x7f04000e;
-        public static final int menu_disconnect=0x7f04000f;
-        public static final int menu_scan=0x7f040010;
-        public static final int menu_stop=0x7f040011;
+        public static final int menu_connect=0x7f04000f;
+        public static final int menu_disconnect=0x7f040010;
+        public static final int menu_scan=0x7f040011;
+        public static final int menu_stop=0x7f040012;
         public static final int no_data=0x7f040006;
+        public static final int spin_string=0x7f04000b;
         public static final int title_devices=0x7f040009;
-        public static final int unknown_characteristic=0x7f04000c;
-        public static final int unknown_device=0x7f04000b;
-        public static final int unknown_service=0x7f04000d;
+        public static final int unknown_characteristic=0x7f04000d;
+        public static final int unknown_device=0x7f04000c;
+        public static final int unknown_service=0x7f04000e;
     }
     public static final class style {
         public static final int AppTheme=0x7f060002;
