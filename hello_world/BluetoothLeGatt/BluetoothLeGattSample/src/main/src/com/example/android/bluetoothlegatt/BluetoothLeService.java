@@ -65,6 +65,7 @@ public class BluetoothLeService extends Service {
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
+    public final static UUID UUID_BATTERY_STATUS = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb");
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.

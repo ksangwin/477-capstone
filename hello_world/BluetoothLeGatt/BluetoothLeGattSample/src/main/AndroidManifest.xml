@@ -37,7 +37,7 @@
         android:icon="@drawable/ic_launcher"
         android:theme="@android:style/Theme.Holo.Light">
         
-        <activity android:name="com.example.menus.FunctionListActivity">
+        <activity android:name="com.example.menus.MainActivity">
         	<intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -51,6 +51,10 @@
         <activity android:name=".DeviceControlActivity"/>
         
         <service android:name=".BluetoothLeService" android:enabled="true"/>
+        
+        <activity android:name="com.example.itemlists.CreateListActivity"/>
+        
+        <activity android:name="com.example.itemlists.NameNewTag" />
         
         
     </application>

@@ -41,21 +41,34 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import com.example.itemlists.ItemList;
+import com.example.itemlists.NameNewTag;
+import com.example.menus.MainActivity;
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
-public class DeviceScanActivity extends ListActivity implements  AdapterView.OnItemSelectedListener{
+public class DeviceScanActivity extends ListActivity {
 	
 	private final static String TAG = DeviceScanActivity.class.getSimpleName();
+	//public final static String EXTRAS_ADD_MODE = "ADD_MODE";
+	public final static String EXTRAS_LIST = "LIST";
+	
 	private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
     
-    TextView selection;
+    private TextView selectListDisplay;
     //Spinner search_list;
-    String[] list_names = { "work", "roadtrip", "sports" };
+    
+    
+    //public boolean addMode;
+    public static ItemList selectedList;
+    public static String selectedList_name;
+    public static BluetoothDevice selectedDev;
 
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
@@ -67,14 +80,20 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
     	Log.d(TAG, "onCreate()");
     	
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
         
-        Log.d(TAG, "attempting to setContentView... please?");
-        setContentView(R.layout.activity_main);
+        Log.d(TAG, "About to get the extra from my starting intent");
         
-        Log.d(TAG, "why do I even bother...");
+        selectedList_name = intent.getStringExtra(EXTRAS_LIST);
+        		
+        Log.d(TAG, "Scanning " + selectedList_name);
+                
+        setContentView(R.layout.activity_scan);
+        
         getActionBar().setTitle(R.string.title_devices);
-        mHandler = new Handler();
         
+        mHandler = new Handler();
         
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -97,16 +116,25 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
             return;
         }
         
-        selection = (TextView) findViewById(R.id.selection);
         
+        selectListDisplay = (TextView) findViewById(R.id.selection);
+        selectListDisplay.setText(selectedList_name + ":");
+        
+        Log.d(TAG, "onCreate finished");
+
+        /*
         Log.d(TAG, "initializing the spinner");
         // making a spinner
         Spinner search_list = (Spinner) findViewById(R.id.list_dropdown);
        
         Log.d(TAG, "creating the spinner adapter");
         // Create an ArrayAdapter using the string array and a default spinner layout
+        String[] listlist = MainActivity.allLists.getListNames();
+        Log.d(TAG, Arrays.toString(listlist));
+        
+        Log.d(TAG, "creating the adapter");
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_spinner_item, list_names);
+                android.R.layout.simple_spinner_item, listlist);
         
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -117,28 +145,33 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
         
         Log.d(TAG, "attaching the callback");
         
-        
         search_list.setOnItemSelectedListener(this);
-        
+        Log.d(TAG, "finished creating...");
+        */
         
     }
     
-    
+    /*
     public void onItemSelected(AdapterView<?> parent, View view, 
             int pos, long id) {
-    	Log.d(TAG, "a thing was selected!");
+    	Log.d(TAG, "thing " + pos + " was selected!");
         // An item was selected. You can retrieve the selected item using
-        // parent.getItemAtPosition(pos)	
-    	selection.setText("Scanning list: " + list_names[pos]);
+        // parent.getItemAtPosition(pos)
+    	if (pos > 0){
+    		String crap = parent.getItemAtPosition(pos).toString();
+    		selectListDisplay.setText(crap);
+    		//scanList 
+    	}
+    	
     }
     
     
 
     public void onNothingSelected(AdapterView<?> parent) {
         // Another interface callback
-    	selection.setText("");
+    	//selectListDisplay.setText("Scanning all tags");
     }
-    
+    */
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -195,7 +228,11 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
             finish();
             return;
-        }
+        } /*else if (requestCode == 1){
+        	String result = data.getStringExtra("result");
+        	selectedList.addTag(selectedDev, result);
+        	finish();
+        } */
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -208,16 +245,43 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
 
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
-        final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
-        if (device == null) return;
-        final Intent intent = new Intent(this, DeviceControlActivity.class);
-        intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
-        intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
-        if (mScanning) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
-            mScanning = false;
-        }
-        startActivity(intent);
+        //final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
+    	selectedDev = mLeDeviceListAdapter.getDevice(position);
+    	
+        if (selectedDev == null) return;
+        
+        
+        // if we're not inspecting items, then we just want to return to the new list page
+        if (true){
+        	final Intent intent = new Intent(this, DeviceControlActivity.class);
+            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, selectedDev.getName());
+            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, selectedDev.getAddress());
+            if (mScanning) {
+                mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                mScanning = false;
+            }
+            startActivity(intent);
+            
+        } /*else {
+        	// check if it's already named
+        	String nname = MainActivity.allLists.getNName(selectedDev);
+        	
+        	if(nname.isEmpty()){
+        		Log.d(TAG, "no existing entry!");
+        		startActivityForResult(new Intent(this, NameNewTag.class), 1);
+        		finish();
+        	} else {
+        		Log.d(TAG, "Adding " + nname);
+        	}
+        	
+        	selectedList.addTag(selectedDev, nname);
+        	finish();
+        }*/
+        
+    }
+    
+    public void updateAdapter(){
+    	mLeDeviceListAdapter.notifyDataSetChanged();
     }
 
     private void scanLeDevice(final boolean enable) {
@@ -228,7 +292,7 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
                 public void run() {
                     mScanning = false;
                     mBluetoothAdapter.stopLeScan(mLeScanCallback);
-                    //invalidateOptionsMenu();
+                    invalidateOptionsMenu();
                 }
             }, SCAN_PERIOD);
 
@@ -285,6 +349,7 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
         public View getView(int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
             // General ListView optimization code.
+            // TODO: add code to display not-found items in red
             if (view == null) {
                 view = mInflator.inflate(R.layout.listitem_device, null);
                 viewHolder = new ViewHolder();
@@ -306,6 +371,11 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
             return view;
         }
     }
+    
+    static class ViewHolder {
+        TextView deviceName;
+        TextView deviceAddress;
+    }
 
     // Device scan callback.
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
@@ -316,15 +386,22 @@ public class DeviceScanActivity extends ListActivity implements  AdapterView.OnI
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mLeDeviceListAdapter.addDevice(device);
-                    mLeDeviceListAdapter.notifyDataSetChanged();
+                	Log.d(TAG, "running our scan");
+                	/* Don't want to display all devices --only the ones specified in the list 
+                	 * For now, I'll set that to "Testing Tag", but later I'll use something like this
+                	 * if (searchList.containsAddress(device.getAddress())) { add device }
+                	 */
+                	//if (device.getName().equals("Testing Tag")){
+                	//	Log.d(TAG, "we have one of our tags!");
+                		mLeDeviceListAdapter.addDevice(device);
+                        mLeDeviceListAdapter.notifyDataSetChanged();
+                	//} else {
+                	//	Log.d(TAG, "I don't know what we're reading...");
+                	//}
                 }
             });
         }
     };
 
-    static class ViewHolder {
-        TextView deviceName;
-        TextView deviceAddress;
-    }
+
 }
