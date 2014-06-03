@@ -31,7 +31,7 @@ public class ListContent {
 
     public static void addEntry(ItemList toAdd) {
     	ListEntry entry = new ListEntry(counter, toAdd.toString(), toAdd);
-    	
+
         ITEMS.add(entry);
         ITEM_MAP.put(entry.id_str, entry);
     }

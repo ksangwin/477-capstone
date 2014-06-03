@@ -15,12 +15,11 @@
         android:textSize="@dimen/margin_large" />
 
     <ListView
-        android:id="@+id/listView1"
+        android:id="@android:id/list"
         android:layout_width="250dp"
         android:layout_height="300dp"
-        android:layout_gravity="center_horizontal" >
-
-    </ListView>
+        android:layout_gravity="center_horizontal"
+        android:background="@android:color/holo_orange_light" />
 
     <Button
         android:id="@+id/saveButton"

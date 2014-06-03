@@ -1,170 +1,270 @@
 package com.example.itemlists;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import android.app.Activity;
+import android.app.ListActivity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.os.Handler.Callback;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.android.bluetoothlegatt.*;
 import com.example.itemlists.ItemList.Tag;
 import com.example.menus.MainActivity;
-import com.example.menus.MainFragment;
 
-public class CreateListActivity extends Activity implements Callback {
+public class CreateListActivity extends ListActivity implements Callback {
 
 	private final static String TAG = CreateListActivity.class.getSimpleName();
 	public final static String EXTRAS_EDIT_MODE = "EDIT MODE";
-	
-	private boolean editMode; //TODO: set this properly
+
+	private boolean editMode; // TODO: set this properly
 	private Button finishList;
 	private EditText listname;
-	private String listname_s;
+	private String listname_s = "Untitled List";
+	private ListView tagList;
+	public static ArrayList<CheckHolder> checkList;
+	public static CheckAdapter checkAdapter;
+
+	private BluetoothAdapter mBluetoothAdapter;
+	private boolean mScanning;
+	private Handler mHandler;
+	private static final int REQUEST_ENABLE_BT = 1;
+	// Stops scanning after 10 seconds.
+	private static final long SCAN_PERIOD = 10000;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		Intent intent = getIntent();
 		intent.getBooleanExtra(EXTRAS_EDIT_MODE, editMode);
-		
+
 		setContentView(R.layout.create_item_list_activity);
 		getActionBar().setTitle(R.string.new_list_title);
-		listname = ((EditText)findViewById(R.id.ListNameInput));
-		
-		finishList = ((Button)findViewById(R.id.saveButton));
-		
+
+		mHandler = new Handler();
+
+		// Use this check to determine whether BLE is supported on the device.
+		// Then you can
+		// selectively disable BLE-related features.
+		if (!getPackageManager().hasSystemFeature(
+				PackageManager.FEATURE_BLUETOOTH_LE)) {
+			Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT)
+					.show();
+			finish();
+		}
+		final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+		mBluetoothAdapter = bluetoothManager.getAdapter();
+
+		// yell at the customer
+		if (mBluetoothAdapter == null) {
+			Toast.makeText(this, R.string.error_bluetooth_not_supported,
+					Toast.LENGTH_SHORT).show();
+			finish();
+			return;
+		}
+
+		listname = ((EditText) findViewById(R.id.ListNameInput));
+
+		finishList = ((Button) findViewById(R.id.saveButton));
+
 		finishList.setOnClickListener(finishNewList);
-		
+
+		tagList = (ListView) findViewById(android.R.id.list);
+
+		// I will likely need to scan and update the list as I do
+		checkAdapter = new CheckAdapter(this, getCheckHolder());
+
+		tagList.setAdapter(checkAdapter);
+
 	}
+
+	private ArrayList<CheckHolder> getCheckHolder() {
+		checkList = new ArrayList<CheckHolder>();
+		// loop through every tag we have
+		Log.d(TAG, "all tags: " + MainActivity.allLists.allTags.dbgString());
+		for (Tag t : MainActivity.allLists.allTags.getTags()) {
+			CheckHolder in = new CheckHolder(t.getDev());
+			checkList.add(in);
+		}
+
+		// do this when we're in edit mode to show which are already in list
+		// checkList.get(1).setSelected(true);
+		return checkList;
+	}
+
 
 	View.OnClickListener finishNewList = new View.OnClickListener() {
 
 		@Override
 		public void onClick(View v) {
 			Log.d(TAG, "Finish the list now!");
-			listname_s = listname.getText().toString();
-			MainActivity.allLists.addList(listname_s, null);
+
+			// save the list name
+			String input = listname.getText().toString();
+			listname_s = input.isEmpty() ? listname_s : input;
+			
+			// get check box status
+			ArrayList<BluetoothDevice> listTags = checkAdapter.getSelected();
+			ItemList newlist = new ItemList(listname_s, MainActivity.allLists);
+			
+			Log.d(TAG, "adding tags: "+ listTags);
+			
+			//TODO: don't add infinite tags plz
+			for (BluetoothDevice d : listTags){
+				// TODO: figure out tag names
+				newlist.addTag(d, "no name yet");			
+			}
+			
+			Log.d(TAG, "all tags right after adding one: " + MainActivity.allLists.allTags.dbgString());
+			
+			MainActivity.allLists.addList(listname_s, newlist);
 			finish();
 		}
 	};
-	/*
-	View.OnClickListener addToList = new View.OnClickListener() {
-
-		@Override
-		public void onClick(View v) {
-			Log.d(TAG, "making a list with content...");
-			listname_s = listname.getText().toString(); 
-			// note: ItemLists are always created empty.
-			MainActivity.allLists.addList(listname_s, new ItemList(listname_s));
-			Log.d(TAG, "Time to scan! Except differently!");
-			
-			//TODO: start a new activity
-			Intent intent = new Intent(getContext(), DeviceScanActivity.class);
-			intent.putExtra("EXTRAS_LIST", listname_s);
-			startActivity(intent);
-		}
-	};
-*/
 
 	@Override
 	public boolean handleMessage(Message arg0) {
 		return false;
 	}
-	
+
 	public Context getContext() {
-	    return (Context)this;
-	} 
-	
-	   // Adapter for holding devices found through scanning.
-    private class AddListAdapter extends BaseAdapter {
-        private ArrayList<Tag> allTags;
-        private LayoutInflater mInflator;
+		return (Context) this;
+	}
 
-        public AddListAdapter() {
-            super();
-            allTags = new ArrayList<Tag>();
-            mInflator = CreateListActivity.this.getLayoutInflater();
-        }
+	/*
+	 * 
+	 * AAAAAAAAAAAAAAAAAAAAAAAAAHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+	 * !
+	 */
 
-        public void addTag(Tag t) {
-            if(!allTags.contains(t)) {
-                allTags.add(t);
-            }
-        }
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		if (!mScanning) {
+			menu.findItem(R.id.menu_stop).setVisible(false);
+			menu.findItem(R.id.menu_scan).setVisible(true);
+			menu.findItem(R.id.menu_refresh).setActionView(null);
+		} else {
+			menu.findItem(R.id.menu_stop).setVisible(true);
+			menu.findItem(R.id.menu_scan).setVisible(false);
+			menu.findItem(R.id.menu_refresh).setActionView(
+					R.layout.actionbar_indeterminate_progress);
+		}
+		return true;
+	}
 
-        public Tag getDevice(int position) {
-            return allTags.get(position);
-        }
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_scan:
+			checkAdapter.clear();
+			scanLeDevice(true);
+			break;
+		case R.id.menu_stop:
+			scanLeDevice(false);
+			break;
+		}
+		return true;
+	}
 
-        public void clear() {
-            allTags.clear();
-        }
+	@Override
+	protected void onPause() {
+		super.onPause();
+		scanLeDevice(false);
+		checkAdapter.clear();
+	}
 
-        @Override
-        public int getCount() {
-            return allTags.size();
-        }
+	@Override
+	protected void onResume() {
+		super.onResume();
 
-        @Override
-        public Object getItem(int i) {
-            return allTags.get(i);
-        }
+		// Ensures Bluetooth is enabled on the device. If Bluetooth is not
+		// currently enabled,
+		// fire an intent to display a dialog asking the user to grant
+		// permission to enable it.
+		if (!mBluetoothAdapter.isEnabled()) {
+			if (!mBluetoothAdapter.isEnabled()) {
+				Intent enableBtIntent = new Intent(
+						BluetoothAdapter.ACTION_REQUEST_ENABLE);
+				startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+			}
+		}
 
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
+		// Initializes list view adapter.
+		checkAdapter = new CheckAdapter(this, getCheckHolder());
+		setListAdapter(checkAdapter);
+		scanLeDevice(true);
+	}
 
-        @Override
-        public View getView(int i, View view, ViewGroup viewGroup) {
-            ViewHolder viewHolder;
-            // General ListView optimization code.
-            // first display bound tags using universal tag list in ListContainer
-            // then display any unbound tags that we've picked up in a scan?
-            
-            if (view == null) {
-                view = mInflator.inflate(R.layout.tag_display, null);
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		// User chose not to enable Bluetooth.
+		if (requestCode == REQUEST_ENABLE_BT
+				&& resultCode == Activity.RESULT_CANCELED) {
+			finish();
+			return;
+		}
+		super.onActivityResult(requestCode, resultCode, data);
+	}
 
-                // TODO: figure out what the fuck is happening here
-                CheckBox ck = (CheckBox) view.findViewById(R.id.checkEntry);
-                
-                viewHolder = new ViewHolder();
-                viewHolder.entry = ck;
-                view.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) view.getTag();
-            }
+	private void scanLeDevice(final boolean enable) {
+		if (enable) {
+			// Stops scanning after a pre-defined scan period.
+			mHandler.postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					mScanning = false;
+					mBluetoothAdapter.stopLeScan(mLeScanCallback);
+					invalidateOptionsMenu();
+				}
+			}, SCAN_PERIOD);
 
-            Tag tag = allTags.get(i);
-            final String tagName = tag.nickname;
-            
-            //TODO: can do some filtering here?
-            if (tagName != null && tagName.length() > 0)
-                viewHolder.entry.setText(tagName);
-            else
-                viewHolder.entry.setText(R.string.unknown_device);
+			mScanning = true;
+			mBluetoothAdapter.startLeScan(mLeScanCallback);
+		} else {
+			mScanning = false;
+			mBluetoothAdapter.stopLeScan(mLeScanCallback);
+		}
+		invalidateOptionsMenu();
+	}
 
-            return view;
-        }
-    }
-    
-    static class ViewHolder {
-        CheckBox entry;
-    }
+	public static void updateAdapter() {
+		checkAdapter.notifyDataSetChanged();
+	}
+
+	// Device scan callback.
+	private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
+
+		@Override
+		public void onLeScan(final BluetoothDevice device, final int rssi,
+				byte[] scanRecord) {
+			runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					CheckHolder stuff = new CheckHolder(device);
+					checkAdapter.add(stuff);
+				}
+			});
+		}
+	};
 
 }

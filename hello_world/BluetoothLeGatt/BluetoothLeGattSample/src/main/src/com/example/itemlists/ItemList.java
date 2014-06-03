@@ -25,18 +25,50 @@ public class ItemList {
 		if(listContainer.allTags.hasNName(nickname)){
 			Log.w(TAG, "This name is already taken!");
 		}
-		String addr = dev.getAddress();
-		Tag t = new Tag(addr, dev.getName(), nickname);
-		knownTags.put(addr, t);
-		listContainer.allTags.addTag(dev, nickname);
+		
+		Tag t = new Tag(dev, nickname);
+		knownTags.put(dev.getAddress(), t);
+		if(!listName.equals("all")){
+			// yeeeaaaahhh. Add to the universal list for bookeeping
+			// but don't have the universal list add it again... and again... and again...
+			listContainer.allTags.addTag(dev, nickname);
+		}
+	}
+	
+	public void addTag (Tag t) {
+		knownTags.put(t.dev.getAddress(), t);
+		// we want this info in case we remove tag from this lists
+		if(!listName.equals("all")){
+			// yeeeaaaahhh. Add to the universal list for bookeeping
+			// but don't have the universal list add it again... and again... and again...
+			listContainer.allTags.addTag(t);
+		} 
 	}
 	
 	public void removeTag (BluetoothDevice dev){	
 		knownTags.remove(dev.getAddress());
 	}
 	
+	public boolean isEmpty(){
+		return knownTags.isEmpty();
+	}
+	
 	public Tag getTag (String addr){
 		 return knownTags.get(addr);
+	}
+	
+	public Tag[] getTags (){
+		return knownTags.values().toArray((new Tag[knownTags.size()]));
+	}
+	
+	public String dbgString(){
+		String everything;
+		if(knownTags.isEmpty()){
+			everything = listName + ": (empty)";
+		} else {
+			everything = listName + ": " + knownTags.values().toString();			
+		}
+		return everything;
 	}
 	
 	public String toString(){
@@ -52,20 +84,29 @@ public class ItemList {
 	}
 	
 	public class Tag {
-		String address;
-		String name;
-		String nickname;
+		public String nickname;
+		public String range;
+		private BluetoothDevice dev;
 		
-		public Tag(String address, String name, String nickname){
-			this.address = address;
-			this.name = name;
+		public Tag(BluetoothDevice dev, String nickname){
 			this.nickname = nickname;
+			this.range = "unscanned";
+			this.dev = dev;
 		}
-		
+		/*
 		public Tag(){
 			this.address = "";
 			this.name = "";
 			this.nickname = "";
+			this.range = "unscanned";
+		} */
+		
+		public String toString(){
+			return nickname + ": " + dev.getAddress();
+		}
+		
+		public BluetoothDevice getDev(){
+			return dev;
 		}
 	}
 

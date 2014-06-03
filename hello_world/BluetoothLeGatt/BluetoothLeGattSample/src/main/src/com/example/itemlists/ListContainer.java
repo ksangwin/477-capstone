@@ -16,7 +16,7 @@ public class ListContainer {
 
 	private final static String TAG =  ListContainer.class.getSimpleName();
 	HashMap<String, ItemList> allLists;
-	ItemList allTags;
+	public ItemList allTags;
 	
 	public ListContainer(){
 		allLists = new HashMap<String, ItemList>();
@@ -35,11 +35,16 @@ public class ListContainer {
 			Log.d(TAG, "made a list "+ list);
 			ListContent.addEntry(list);
 		}
+		Log.d(TAG, "Better update the main screen adapter..");
 		MainFragment.updateAdapter();
 	}
 	
 	public ItemList getList(String listName){
-		return allLists.get(listName);
+		ItemList ret = allLists.get(listName);
+		if (ret == null){
+			Log.e(TAG, "given list does not exist!!");
+		}
+		return ret;
 	}
 	
 	public void deleteList(String listName){

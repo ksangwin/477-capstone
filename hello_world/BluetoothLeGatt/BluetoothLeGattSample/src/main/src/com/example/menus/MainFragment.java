@@ -2,14 +2,12 @@ package com.example.menus;
 
 //import android.R;
 
-import com.example.android.bluetoothlegatt.DeviceScanActivity;
 import com.example.android.bluetoothlegatt.R;
 import com.example.itemlists.CreateListActivity;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.app.ListFragment;
-import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -145,7 +143,7 @@ public class MainFragment extends ListFragment {
     
     public static void updateAdapter(){
     	adapter.notifyDataSetChanged();
-        Log.d(TAG, "adapter hopefully contains: " + ListContent.ITEMS.toString());
+        Log.d(TAG, "Updated Adapter: " + ListContent.ITEMS.toString());
     }
 
     @Override

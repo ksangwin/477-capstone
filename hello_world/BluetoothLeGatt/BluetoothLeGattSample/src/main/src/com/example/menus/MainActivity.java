@@ -2,6 +2,7 @@ package com.example.menus;
 
 import com.example.android.bluetoothlegatt.*;
 import com.example.itemlists.*;
+import com.example.itemlists.ItemList.Tag;
 
 //import android.R;
 import android.app.Activity;
@@ -56,9 +57,20 @@ public class MainActivity extends Activity
         fragmentTransaction.commit();
         */
         allLists = new ListContainer();
-        Log.d(TAG, "adding Show All as initial list" );
+        Log.d(TAG, "adding Show All as initial list..." );
         allLists.addList("Show All", null);
+
+        if(!allLists.allTags.isEmpty()){
+        	Log.d(TAG, "now adding items to show all");
+            for (Tag t : allLists.allTags.getTags()){
+            	Log.d(TAG, "adding tag " + t.nickname);
+            	allLists.getList("ShowAll").addTag(t);
+            }
+        }
+        Log.d(TAG, "AM I HERE?");
         
+        Log.d(TAG, "ShowAll: " + allLists.getList("Show All").dbgString());
+
         Log.d(TAG, "finished onCreate()");
 
     }
