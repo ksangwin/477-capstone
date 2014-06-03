@@ -352,21 +352,26 @@ public class DeviceScanActivity extends ListActivity {
                 viewHolder = (ViewHolder) view.getTag();
             }
 
+            
+            
             Log.d(TAG, "LeAdapter: " + this.toString());
             Log.d(TAG, "grabbing a device " + i + " out of the adapter so we can print it");
             
             BluetoothDevice device = mLeDevices.get(i);
-            Log.d(TAG, "DUR: " + mRSSI.get(i));
             int rssi = mRSSI.get(i);
             final String deviceName = device.getName();
+            
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
             else
                 viewHolder.deviceName.setText(R.string.unknown_device);
+            
             viewHolder.deviceAddress.setText(device.getAddress());
             viewHolder.deviceRSSI.setText(String.valueOf(rssi));
 
-            Log.d(TAG, "displaying tag " + deviceName);
+            Log.d(TAG, "displaying tag " + deviceName + " (now in COLOR!)");
+            
+            view.setBackgroundColor(setRSSIcolor(rssi));
             
             return view;
         }
