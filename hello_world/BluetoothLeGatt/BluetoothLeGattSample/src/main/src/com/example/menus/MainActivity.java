@@ -58,16 +58,11 @@ public class MainActivity extends Activity
         */
         allLists = new ListContainer();
         Log.d(TAG, "adding Show All as initial list..." );
-        allLists.addList("Show All", null);
-
-        if(!allLists.allTags.isEmpty()){
-        	Log.d(TAG, "now adding items to show all");
-            for (Tag t : allLists.allTags.getTags()){
-            	Log.d(TAG, "adding tag " + t.nickname);
-            	allLists.getList("ShowAll").addTag(t);
-            }
+        if(!allLists.containsList("Show All")){
+        	Log.d(TAG, "adding show all");
+        	// don't add duplicates
+        	allLists.addList("Show All", null);        	
         }
-        Log.d(TAG, "AM I HERE?");
         
         Log.d(TAG, "ShowAll: " + allLists.getList("Show All").dbgString());
 

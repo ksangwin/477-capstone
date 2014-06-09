@@ -3,23 +3,27 @@
     android:id="@+id/LinearLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
+    android:background="@color/White"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/margin_medium" >
 
     <EditText
         android:id="@+id/ListNameInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="250dp"
+        android:layout_height="60dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:layout_marginTop="10dp"
         android:ems="10"
-        android:hint="New List"
-        android:padding="10dp"
+        android:hint="Untitled List"
         android:textSize="@dimen/margin_large" />
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="250dp"
-        android:layout_height="300dp"
+        android:layout_height="270dp"
         android:layout_gravity="center_horizontal"
-        android:background="@android:color/holo_orange_light" />
+        android:background="@drawable/rounded_new_list" />
 
     <Button
         android:id="@+id/saveButton"
@@ -27,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginTop="20dp"
-        android:background="@drawable/scan_button"
+        android:background="@drawable/button_save_list"
         android:text="Save"
         android:textColor="@android:color/primary_text_dark_nodisable"
         android:textSize="@dimen/margin_large"

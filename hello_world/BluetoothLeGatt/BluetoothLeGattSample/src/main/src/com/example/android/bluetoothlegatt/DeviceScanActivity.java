@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -43,6 +44,8 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import com.example.itemlists.ItemList;
 import com.example.itemlists.ItemList.Tag;
@@ -57,42 +60,40 @@ public class DeviceScanActivity extends ListActivity {
 	//public final static String EXTRAS_ADD_MODE = "ADD_MODE";
 	public final static String EXTRAS_LIST = "LIST";
 	
+	private int num_ave = 5; // Use indicate number of averages to do for RSSI values
+	private static int maxInterval = 2000; // countdown in milliseconds for each timer
+	
 	private LeDeviceListAdapter LeAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
     
     private TextView selectListDisplay;
-    //Spinner search_list;
     
-    public int closeRange = -80;
-    public int minRange = -120; // the min
+    public int closeRange = -95;
+    public int minRange = -120; // the min RSSI val
+    public int outOfRange = -200;
     
     public boolean showAll;
     public static ItemList selectedList;
     public static String selectedList_name;
-    public static BluetoothDevice selectedDev;
+    public static DevEntry selectedDev;
 
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 100000;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	
-    	Log.d(TAG, "onCreate()");
     	
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
         
-        Log.d(TAG, "About to get the extra from my starting intent");
-        
         selectedList_name = intent.getStringExtra(EXTRAS_LIST);
         selectedList = MainActivity.allLists.getList(selectedList_name);
         showAll = selectedList_name.equals("Show All");
-        		
-        Log.d(TAG, "Scanning " + selectedList_name);
         
         setContentView(R.layout.activity_scan);
         
@@ -124,9 +125,6 @@ public class DeviceScanActivity extends ListActivity {
         
         selectListDisplay = (TextView) findViewById(R.id.selection);
         selectListDisplay.setText(selectedList_name + ":");
-
-        
-        Log.d(TAG, "onCreate finished");
 
     }
 
@@ -173,6 +171,9 @@ public class DeviceScanActivity extends ListActivity {
                 startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
             }
         }
+        
+        //Log.i(TAG, "here are all the tags: " + Arrays.toString(MainActivity.allLists.getTags()));
+        //Log.i(TAG, "here are my tags: " + Arrays.toString(selectedList.getTags()));
 
         // Initializes list view adapter.
         LeAdapter = new LeDeviceListAdapter();
@@ -180,16 +181,13 @@ public class DeviceScanActivity extends ListActivity {
         
         // load up the adapter
         if (!selectedList.isEmpty()){
-        	int i = 0;
+        	
         	for (Tag t : selectedList.getTags()){
-            	LeAdapter.addDevice(t.getDev());
-            	// make sure that RSSI is added at the same index as the device
-            	LeAdapter.setRSSI(minRange, LeAdapter.mLeDevices.indexOf(t.getDev()));
-            	i++;
+            	LeAdapter.addDevice(t.getDev());            	
             }
         	LeAdapter.notifyDataSetChanged();
         }
-        Log.d(TAG, "LeAdapter: " + LeAdapter.toString());
+        Log.d(TAG, "LeAdapter on resume: " + LeAdapter.toString());
         scanLeDevice(true);
     }
     
@@ -206,11 +204,7 @@ public class DeviceScanActivity extends ListActivity {
         if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED) {
             finish();
             return;
-        } /*else if (requestCode == 1){
-        	String result = data.getStringExtra("result");
-        	selectedList.addTag(selectedDev, result);
-        	finish();
-        } */
+        } 
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -218,7 +212,7 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         //final BluetoothDevice device = LeAdapter.getDevice(position);
-    	selectedDev = LeAdapter.getDevice(position);
+    	selectedDev = (DevEntry)LeAdapter.getItem(position);
     	
         if (selectedDev == null) return;
         
@@ -227,7 +221,7 @@ public class DeviceScanActivity extends ListActivity {
         if (true){
         	final Intent intent = new Intent(this, DeviceControlActivity.class);
             intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, selectedDev.getName());
-            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, selectedDev.getAddress());
+            intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, selectedDev.device.getAddress());
             if (mScanning) {
                 mBluetoothAdapter.stopLeScan(mLeScanCallback);
                 mScanning = false;
@@ -264,35 +258,42 @@ public class DeviceScanActivity extends ListActivity {
 
     // Adapter for holding devices found through scanning.
     private class LeDeviceListAdapter extends BaseAdapter {
-        private ArrayList<BluetoothDevice> mLeDevices;
+        private ArrayList<DevEntry> mLeDevices;
         private LayoutInflater mInflator;
-        private ArrayList<Integer> mRSSI;
-        private int count; // Use as an iterator of RSSI values
 
         public LeDeviceListAdapter() {
             super();
-            mLeDevices = new ArrayList<BluetoothDevice>();
+            mLeDevices = new ArrayList<DevEntry>();
             mInflator = DeviceScanActivity.this.getLayoutInflater();
-            mRSSI = new ArrayList<Integer>();
-            count = 0;
         }
 
         public void addDevice(BluetoothDevice device) {
-        	Log.d(TAG, "adding " + device.getName() + " to our scan list adapter");
-            if(!mLeDevices.contains(device)) {
-                mLeDevices.add(device);
-                count++;
+            if(!hasDevice(device)) {
+                mLeDevices.add(new DevEntry(device));
             }
         }
+        
         public void setRSSI(int rssi, int index) {
-        	if(mRSSI.size() != 0 && mRSSI.size() > index) {
-        		mRSSI.remove(index);
+        	DevEntry cur = mLeDevices.get(index);
+        	cur.setRSSI(rssi);
+        }
+        
+        public int indexOf(BluetoothDevice dev){
+        	for(int i = 0; i < mLeDevices.size(); i++) {
+        		DevEntry de = mLeDevices.get(i); 
+        		if(de.device.equals(dev)){
+        			return i;
+        		}
         	}
-        	mRSSI.add(index,rssi);
+        	return -1;
+        }
+        
+        public boolean hasDevice(BluetoothDevice dev){
+        	return indexOf(dev) >= 0;
         }
         
         public BluetoothDevice getDevice(int position) {
-            return mLeDevices.get(position);
+            return mLeDevices.get(position).device;
         }
 
         public void clear() {
@@ -315,30 +316,30 @@ public class DeviceScanActivity extends ListActivity {
         }
         
         public String toString(){
-        	String allDevs = "My BLE devices: ";
-        	for(BluetoothDevice d : mLeDevices){
-        		allDevs = allDevs + d.getName();
+        	String allDevs = "{ ";
+        	for(DevEntry d : mLeDevices){
+        		allDevs = allDevs + d.device.getName();
         	}
-        	return allDevs;
+        	return allDevs + " }";
         }
         
-        public int setRSSIcolor(int rssi){
-        	if(rssi == 0){
-        		return Color.WHITE;
+        public int getRSSIcolor(int rssi){
+        	if(rssi == outOfRange){
+        		return R.color.myRed;
         	} else if (rssi > closeRange){
-        		return Color.GREEN;
+        		return R.color.myGreen;
         	} else {
-        		return Color.YELLOW;
+        		return R.color.myYellow;
         	}
         }
 
         @Override
         public View getView(int i, View view, ViewGroup viewGroup) {
             ViewHolder viewHolder;
+             
             
             Log.d(TAG, "trying to get a list view..");
             // General ListView optimization code.
-            // TODO: add code to display not-found items in red
             if (view == null) {
                 view = mInflator.inflate(R.layout.listitem_device, null);
                 viewHolder = new ViewHolder();
@@ -351,27 +352,21 @@ public class DeviceScanActivity extends ListActivity {
             } else {
                 viewHolder = (ViewHolder) view.getTag();
             }
-
             
+            DevEntry de = (DevEntry)getItem(i);
+            int rssi = de.curRSSI;
+            final String deviceName = de.getName();
             
-            Log.d(TAG, "LeAdapter: " + this.toString());
-            Log.d(TAG, "grabbing a device " + i + " out of the adapter so we can print it");
-            
-            BluetoothDevice device = mLeDevices.get(i);
-            int rssi = mRSSI.get(i);
-            final String deviceName = device.getName();
             
             if (deviceName != null && deviceName.length() > 0)
                 viewHolder.deviceName.setText(deviceName);
             else
                 viewHolder.deviceName.setText(R.string.unknown_device);
             
-            viewHolder.deviceAddress.setText(device.getAddress());
+            viewHolder.deviceAddress.setText(de.device.getAddress());
             viewHolder.deviceRSSI.setText(String.valueOf(rssi));
 
-            Log.d(TAG, "displaying tag " + deviceName + " (now in COLOR!)");
-            
-            view.setBackgroundColor(setRSSIcolor(rssi));
+            view.setBackgroundResource(getRSSIcolor(rssi));
             
             return view;
         }
@@ -381,6 +376,107 @@ public class DeviceScanActivity extends ListActivity {
         TextView deviceName;
         TextView deviceAddress;
         TextView deviceRSSI;
+    }
+    
+    private class DevEntry {
+        BluetoothDevice device;
+        String nname;
+        int curRSSI;
+        int runningSum;
+        int tally;
+        int interval;
+        int numRSSIupdates;
+        @SuppressWarnings("unused")
+		CountDownTimer timer;
+        boolean dead;
+        
+        
+        public DevEntry(BluetoothDevice d){
+        	device = d;
+        	nname = null;
+        	curRSSI = outOfRange;
+        	runningSum = 0;
+        	tally = 0;
+        	interval = maxInterval;
+        	dead = false;
+        	startTimer();
+        }
+        
+        public void setRSSI(int rssi){
+        	// if we've grabbed enough counts to average them
+        	if(tally >= num_ave) {
+        		curRSSI = (int)((float) runningSum / (float)num_ave);
+        		runningSum = curRSSI;
+        		tally = 0;
+        	} else {
+        		runningSum += rssi;
+        		tally += 1;
+        		//Log.d(TAG, "adding to the running total (" + tally + "th time)");
+        	}
+        	
+        	//Log.d(TAG, "Entry RSSI updated to: " + toString());
+
+        	if(dead){
+        		startTimer();
+        		dead = false;
+        	}
+        	
+        	numRSSIupdates++;
+        	
+        	//Log.i(TAG, "set RSSI " + numRSSIupdates + " since timer");        	
+            
+        }
+        
+        private void startTimer(){
+        	numRSSIupdates = 0;
+        	timer = new CountDownTimer(1000, interval) {
+
+        	     public void onTick(long millisUntilFinished) { }
+
+        	     public void onFinish() {
+        	         if((numRSSIupdates == 0) && mScanning){     	        	 
+        	        	 // we're dead
+        	        	 Log.i(TAG, "Tag went out of range!");
+        	        	 curRSSI = outOfRange;
+        	        	 dead = true;
+        	        	 updateAdapter();
+        	         } else {
+        	        	 // start counting again
+        	        	 numRSSIupdates = 0;
+        	        	 Log.i(TAG, "Tag was active over last 5 seconds. Good... good...");
+        	        	 this.start(); // start up this timer again
+        	         }
+        	     }
+        	  }.start();
+
+        }
+        
+        /**
+         * This can be used to update the nname field inside of this device entry
+         * The device entry should never have a reason to change the nname and it contains
+         * no tag itself, so it is necessary to retrieve the nname from a tag. 
+         */
+        public String getNName(){
+        	// attempt to get tag (it may not be registered with us yet)
+        	Tag instance = MainActivity.allLists.getTag(device.getAddress());
+        	
+        	if (instance == null){
+        		return null;
+        	}
+        	
+        	String n = instance.getNname();
+        	nname = n;
+        	return n;
+        }
+        
+        public String getName(){
+        	getNName();
+        	return (nname != null) ? nname : device.getName();
+        }
+        
+        public String toString(){
+        	return device.getName() + ": RSSI=" + curRSSI + " (" + runningSum + "/" + tally + ")"; 
+        }
     }
 
     // Device scan callback.
@@ -392,28 +488,27 @@ public class DeviceScanActivity extends ListActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                	Log.d(TAG, "running our scan");
-                	
+
                 	// we won't add devices to the adapter here when scanning other lists
                 	// their tags will display constantly, rather than appear when visible
                 	if (showAll){
-                		Log.d(TAG, "adding a device because ShowAll");
                 		LeAdapter.addDevice(device);
                         LeAdapter.notifyDataSetChanged();
                 	}
                 	
                 	// it's ok to do this regardless of the list we're scanning though
-                	
-                	int toUpdate = LeAdapter.mLeDevices.indexOf(device);                	
-                	LeAdapter.setRSSI(rssi, toUpdate);
-                	LeAdapter.notifyDataSetChanged();
+                	int toUpdate = LeAdapter.indexOf(device);
+                	if(toUpdate >= 0){
+                		Log.i(TAG, "updating RSSI of " + device.getName());
+                		LeAdapter.setRSSI(rssi, toUpdate);
+                		LeAdapter.notifyDataSetChanged();
+                	} else {
+                		Log.w(TAG, "Did not update RSSI!");
+                	}
 
-
-                    
                 }
             });
         }
     };
-
 
 }

@@ -14,27 +14,18 @@
 
     <Button
         android:id="@+id/newList"
+        style="@style/newListButton"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="@drawable/newlist_button"
-        android:gravity="center|center_vertical"
         android:text="New List" />
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="250dp" 
-        android:background="@android:color/white"
+        android:layout_height="250dp"
+        android:divider="#778899"
+        android:dividerHeight="2px"
+        android:background="@drawable/rounded_list"
         android:gravity="center|center_vertical" />
-
-    <Button
-        android:id="@+id/start_scan"
-        style="@style/Theme.Base"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="@drawable/scan_button"
-        android:text="Start Scan"
-        android:textSize="@dimen/margin_large"
-        android:textStyle="bold" />
 
 </LinearLayout>

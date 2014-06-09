@@ -100,9 +100,9 @@ public class CreateListActivity extends ListActivity implements Callback {
 	private ArrayList<CheckHolder> getCheckHolder() {
 		checkList = new ArrayList<CheckHolder>();
 		// loop through every tag we have
-		Log.d(TAG, "all tags: " + MainActivity.allLists.allTags.dbgString());
-		for (Tag t : MainActivity.allLists.allTags.getTags()) {
-			CheckHolder in = new CheckHolder(t.getDev());
+		
+		for (Tag t : MainActivity.allLists.getAllTags()) {
+			CheckHolder in = new CheckHolder(t.getDev(), t.getNname());
 			checkList.add(in);
 		}
 
@@ -126,15 +126,13 @@ public class CreateListActivity extends ListActivity implements Callback {
 			ArrayList<BluetoothDevice> listTags = checkAdapter.getSelected();
 			ItemList newlist = new ItemList(listname_s, MainActivity.allLists);
 			
-			Log.d(TAG, "adding tags: "+ listTags);
-			
-			//TODO: don't add infinite tags plz
-			for (BluetoothDevice d : listTags){
-				// TODO: figure out tag names
-				newlist.addTag(d, "no name yet");			
+			if (listTags != null){
+				Log.d(TAG, "adding tags: "+ listTags);
+				
+				for (BluetoothDevice d : listTags){
+					newlist.addTag(d, d.getName());			
+				}	
 			}
-			
-			Log.d(TAG, "all tags right after adding one: " + MainActivity.allLists.allTags.dbgString());
 			
 			MainActivity.allLists.addList(listname_s, newlist);
 			finish();
@@ -156,6 +154,7 @@ public class CreateListActivity extends ListActivity implements Callback {
 	 * !
 	 */
 
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
@@ -260,7 +259,13 @@ public class CreateListActivity extends ListActivity implements Callback {
 			runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					CheckHolder stuff = new CheckHolder(device);
+					Tag t = MainActivity.allLists.getTag(device.getAddress());
+					CheckHolder stuff;
+					if( t != null){
+						stuff = new CheckHolder(t.getDev(), t.getNname());						
+					} else {
+						stuff = new CheckHolder(device, device.getName());
+					}
 					checkAdapter.add(stuff);
 				}
 			});

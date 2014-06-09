@@ -22,27 +22,29 @@ public class ItemList {
 	}
 	
 	public void addTag (BluetoothDevice dev, String nickname) {
-		if(listContainer.allTags.hasNName(nickname)){
+		if(listContainer.nNameTaken(nickname)){
 			Log.w(TAG, "This name is already taken!");
 		}
 		
 		Tag t = new Tag(dev, nickname);
 		knownTags.put(dev.getAddress(), t);
+		/*
 		if(!listName.equals("all")){
 			// yeeeaaaahhh. Add to the universal list for bookeeping
 			// but don't have the universal list add it again... and again... and again...
 			listContainer.allTags.addTag(dev, nickname);
-		}
+		}*/
 	}
 	
 	public void addTag (Tag t) {
 		knownTags.put(t.dev.getAddress(), t);
 		// we want this info in case we remove tag from this lists
+		/*
 		if(!listName.equals("all")){
 			// yeeeaaaahhh. Add to the universal list for bookeeping
 			// but don't have the universal list add it again... and again... and again...
 			listContainer.allTags.addTag(t);
-		} 
+		} */
 	}
 	
 	public void removeTag (BluetoothDevice dev){	
@@ -56,7 +58,7 @@ public class ItemList {
 	public Tag getTag (String addr){
 		 return knownTags.get(addr);
 	}
-	
+		
 	public Tag[] getTags (){
 		return knownTags.values().toArray((new Tag[knownTags.size()]));
 	}
@@ -84,13 +86,11 @@ public class ItemList {
 	}
 	
 	public class Tag {
-		public String nickname;
-		public String range;
+		private String nickname;
 		private BluetoothDevice dev;
 		
 		public Tag(BluetoothDevice dev, String nickname){
 			this.nickname = nickname;
-			this.range = "unscanned";
 			this.dev = dev;
 		}
 		/*
@@ -107,6 +107,19 @@ public class ItemList {
 		
 		public BluetoothDevice getDev(){
 			return dev;
+		}
+		
+		public String getAddr(){
+			return dev.getAddress();
+		}
+		
+		public String getNname(){
+			return nickname;
+		}
+		
+		public void setNname(String n){
+			nickname = n;
+			listContainer.updateTagInstances(this);
 		}
 	}
 

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="newListButton">
+        <item name="android:layout_gravity">center_horizontal</item>
+        <item name="android:padding">6dp</item>
+        <item name="android:background">@drawable/button_new_list</item>
+        <item name="android:textColor">#000</item>
+        <item name="android:gravity">center_vertical|left</item>
+    </style>
+
+</resources>

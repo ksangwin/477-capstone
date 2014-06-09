@@ -9,10 +9,10 @@ public class CheckHolder {
 	public boolean selected;
 
 	  
-	public CheckHolder(BluetoothDevice d) {
+	public CheckHolder(BluetoothDevice d, String name) {
 		dev = d;
 		this.address = d.getAddress();
-		this.name = d.getName();
+		this.name = name;
 		selected = false;
 	}
 
@@ -23,6 +23,7 @@ public class CheckHolder {
 	public String getAddr(){
 		return address;
 	}
+	
 	
 	public BluetoothDevice getDev(){
 		return dev;

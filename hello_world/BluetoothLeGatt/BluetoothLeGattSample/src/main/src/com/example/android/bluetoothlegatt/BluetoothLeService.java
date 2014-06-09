@@ -47,6 +47,7 @@ public class BluetoothLeService extends Service {
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     private int mConnectionState = STATE_DISCONNECTED;
+    private int mRSSI;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
@@ -65,7 +66,11 @@ public class BluetoothLeService extends Service {
 
     public final static UUID UUID_HEART_RATE_MEASUREMENT =
             UUID.fromString(SampleGattAttributes.HEART_RATE_MEASUREMENT);
-    public final static UUID UUID_BATTERY_STATUS = UUID.fromString("0000180f-0000-1000-8000-00805f9b34fb");
+    
+    public final static UUID UUID_BATTERY_STATUS =
+            UUID.fromString(SampleGattAttributes.UUID_BATTERY_STATUS);
+    
+   public final static UUID UUID_BUTTON_RECEIVED = UUID.fromString(SampleGattAttributes.BUTTON_RECEIVED);
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -107,6 +112,15 @@ public class BluetoothLeService extends Service {
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
             }
         }
+        
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status)
+        {
+        	if (status == BluetoothGatt.GATT_SUCCESS)
+        	{
+        		setmRSSI(rssi);
+        	}
+        }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
@@ -140,7 +154,8 @@ public class BluetoothLeService extends Service {
             final int heartRate = characteristic.getIntValue(format, 1);
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
             intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-        } else {
+        } 
+        else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -282,6 +297,14 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.readCharacteristic(characteristic);
     }
+    
+    public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+    	mBluetoothGatt.writeCharacteristic(characteristic);
+    }
+    
+    public void  readRemoteRssi(){
+    	mBluetoothGatt.readRemoteRssi();
+    }
 
     /**
      * Enables or disables notification on a give characteristic.
@@ -304,6 +327,13 @@ public class BluetoothLeService extends Service {
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }
+        else if(UUID_BUTTON_RECEIVED.equals(characteristic.getUuid()))
+        {
+        	BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }
     }
 
     /**
@@ -317,4 +347,12 @@ public class BluetoothLeService extends Service {
 
         return mBluetoothGatt.getServices();
     }
+
+	public int getmRSSI() {
+		return mRSSI;
+	}
+
+	public void setmRSSI(int mRSSI) {
+		this.mRSSI = mRSSI;
+	}
 }
