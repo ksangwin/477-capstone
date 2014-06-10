@@ -35,7 +35,7 @@ public class CreateListActivity extends ListActivity implements Callback {
 	private final static String TAG = CreateListActivity.class.getSimpleName();
 	public final static String EXTRAS_EDIT_MODE = "EDIT MODE";
 
-	private boolean editMode; // TODO: set this properly
+	private boolean editMode;
 	private Button finishList;
 	private EditText listname;
 	private String listname_s = "Untitled List";

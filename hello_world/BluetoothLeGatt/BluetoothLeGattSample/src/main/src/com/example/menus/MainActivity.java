@@ -38,7 +38,7 @@ public class MainActivity extends Activity
     private final static String TAG = MainActivity.class.getSimpleName();
 
 
-    public static ListContainer allLists;
+    public final static ListContainer allLists = new ListContainer();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +56,7 @@ public class MainActivity extends Activity
         fragmentTransaction.add(R.layout.activity_main, new MainFragment());
         fragmentTransaction.commit();
         */
-        allLists = new ListContainer();
+        
         Log.d(TAG, "adding Show All as initial list..." );
         if(!allLists.containsList("Show All")){
         	Log.d(TAG, "adding show all");

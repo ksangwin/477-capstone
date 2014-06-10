@@ -64,7 +64,7 @@ public class DeviceControlActivity extends Activity {
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
     private TextView mConnectionState;
-    private TextView mDataField;
+    //private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
     //private ExpandableListView mGattServicesList;
@@ -73,14 +73,15 @@ public class DeviceControlActivity extends Activity {
     private SeekBar mGattServicePower;
     private ProgressBar mGattServiceDistance;
     private BluetoothLeService mBluetoothLeService;
+    private TextView mBattery;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     private boolean mConnected = false;
     private BluetoothAdapter mBluetoothAdapter;
     // RSSI buffer is used to averaging RSSI value
-    //private List<Integer> mDistance_buffer = new ArrayList<Integer>();
+    private List<Integer> mRSSI_buffer = new ArrayList<Integer>();
     private int prev_distance;
-    private int num_ave = 5;
+    private int num_ave = 15;
     private int count = 0;
     //private BluetoothGattCharacteristic mNotifyCharacteristic;
     private EditText tagName;
@@ -135,7 +136,7 @@ public class DeviceControlActivity extends Activity {
                 // Show all the supported services and characteristics on the user interface.
                 displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
             }
         }
         
@@ -336,7 +337,7 @@ public class DeviceControlActivity extends Activity {
 
     private void clearUI() {
         //mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
-        mDataField.setText(R.string.no_data);
+        //mDataField.setText(R.string.no_data);
     }
 
     @Override
@@ -349,11 +350,12 @@ public class DeviceControlActivity extends Activity {
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
 
         // Sets up UI references.
-        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+        //((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         //mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
         //mGattServicesList.setOnChildClickListener(servicesListClickListner);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
-        mDataField = (TextView) findViewById(R.id.data_value);
+        //mDataField = (TextView) findViewById(R.id.data_value);
+        mBattery = (TextView) findViewById(R.id.battery_i);
         mGattServiceLight = (Button) findViewById(R.id.light_i);
         mGattServiceBuzzer = (Button) findViewById(R.id.buzzer_i);
         mGattServicePower = (SeekBar) findViewById(R.id.power_mode);
@@ -460,11 +462,11 @@ public class DeviceControlActivity extends Activity {
     
     
 
-    private void displayData(String data) {
+/*    private void displayData(String data) {
         if (data != null) {
             mDataField.setText(data);
         }
-    }
+    }*/
     
 
     // Demonstrates how to iterate through the supported GATT Services/Characteristics.
@@ -510,6 +512,15 @@ public class DeviceControlActivity extends Activity {
             mGattCharacteristics.add(charas);
             gattCharacteristicData.add(gattCharacteristicGroupData);
         }
+        final BluetoothGattCharacteristic characteristic = mGattCharacteristics.get(3).get(0);
+        mBluetoothLeService.readCharacteristic(characteristic);
+        while(characteristic.getValue() == null)
+        {
+        }
+        
+        byte[] data_r = characteristic.getValue();
+        String battery_level = data_r[0] + "%";
+        mBattery.setText(battery_level);
 
 //        SimpleExpandableListAdapter gattServiceAdapter = new SimpleExpandableListAdapter(
 //                this,
@@ -543,11 +554,31 @@ public class DeviceControlActivity extends Activity {
                 @Override
                 public void run() {
                 	int distance;
-                	int base = 60; // this is the max rssi.. (which will appear as a min)
-                	double scaler = base/100.0; // this is to normalize from 120 to 100
+                	//int base = 60; // this is the max rssi.. (which will appear as a min)
+                	//double scaler = base/100.0; // this is to normalize from 120 to 100
                 	//int rssi;
-                	
                 	if(mBluetoothLeService != null)
+                	{
+                		mBluetoothLeService.readRemoteRssi();
+                		if(mRSSI_buffer.isEmpty())
+                		{
+                			distance = (mBluetoothLeService.getmRSSI() + 70) *(100/40);
+                		}
+                		else
+                		{
+                			distance = mRSSI_buffer.get(0) + (mBluetoothLeService.getmRSSI() + 70) * (100/40);
+                			mRSSI_buffer.remove(0);
+                		}
+                		mRSSI_buffer.add(0,distance);
+                		count++;
+                		if(count % num_ave == 0)
+                		{
+                			mGattServiceDistance.setProgress(mRSSI_buffer.get(0)/num_ave);
+                			count = 0;
+                			mRSSI_buffer.remove(0);
+                		}
+                	}
+/*                	if(mBluetoothLeService != null)
                 	{
 	                	mBluetoothLeService.readRemoteRssi();
 
@@ -566,7 +597,7 @@ public class DeviceControlActivity extends Activity {
 	                		count = 0;
 	                		prev_distance = 0;
 	                	}
-                	}
+                	}*/
                 }
             });
         }

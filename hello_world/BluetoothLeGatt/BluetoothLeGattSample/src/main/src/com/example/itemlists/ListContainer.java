@@ -17,11 +17,12 @@ import android.util.Log;
 public class ListContainer {
 
 	private final static String TAG =  ListContainer.class.getSimpleName();
-	private HashMap<String, ItemList> allLists;
+	//private HashMap<String, ItemList> allLists;
+	private ArrayList<ListE> allLists;
 	//public ItemList allTags;
 	
 	public ListContainer(){
-		allLists = new HashMap<String, ItemList>();
+		allLists = new ArrayList<ListE>();
 		//allTags = new ItemList("all", this);
 	}
 	
@@ -32,46 +33,49 @@ public class ListContainer {
 		
 		if (list != null) {
 			// if the list is already created
-			allLists.put(listName, list);
+			allLists.add(new ListE(listName, list));
 			ListContent.addEntry(list);
 		} else {
 			// the empty list case
 			list = new ItemList(listName, this);
-			allLists.put(listName, list);
-			Log.d(TAG, "made a list "+ list);
+			allLists.add(new ListE(listName, list));
 			ListContent.addEntry(list);
 		}
-		Log.d(TAG, "Better update the main screen adapter..");
+		Log.d(TAG, "Current lists: " + allLists);
 		MainFragment.updateAdapter();
 	}
 	
 	public ArrayList<Tag> getAllTags(){
 		ArrayList<Tag> ts = new ArrayList<Tag>();
-		for (ItemList l : allLists.values()){
-			ArrayList<Tag> poop = new ArrayList<Tag>(Arrays.asList(l.getTags()));
+		for (ListE le : allLists){
+			ArrayList<Tag> poop = new ArrayList<Tag>(Arrays.asList(le.list.getTags()));
 			ts.addAll(poop);
 		}
 		return ts;
 	}
 	
 	public boolean containsList(String listName){
-		boolean temp = allLists.containsKey(listName);
-		Log.d(TAG, "list is " + (temp ? "contained" : "not contained"));
-		return temp;
+		for(ListE le : allLists){
+			if(le.name.equals(listName)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public ItemList getList(String listName){
-		ItemList ret = allLists.get(listName);
-		if (ret == null){
-			Log.w(TAG, "given list does not exist!!");
+		for(ListE le : allLists){
+			if(le.name.equals(listName)){
+				return le.list;
+			}
 		}
-		return ret;
+		return null;
 	}
 	
 	public void updateTagInstances(Tag t){
 		Tag cur;
-		for (ItemList list : allLists.values()) {
-		    cur = list.getTag(t.getAddr());
+		for (ListE le: allLists) {
+		    cur = le.list.getTag(t.getAddr());
 		    
 		    if (cur != null){
 		    	cur = t;
@@ -81,8 +85,8 @@ public class ListContainer {
 	
 	public Tag getTag(String a){
 		Tag cur;
-		for (ItemList list : allLists.values()) {
-		    cur = list.getTag(a);
+		for (ListE le : allLists) {
+		    cur = le.list.getTag(a);
 		    
 		    if (cur != null){
 		    	return cur;
@@ -96,8 +100,8 @@ public class ListContainer {
 	}
 	
 	public boolean nNameTaken(String name){
-		for (ItemList list : allLists.values()) {
-		    for(Tag t : list.getTags()){
+		for (ListE le : allLists) {
+		    for(Tag t : le.list.getTags()){
 		    	if (t.getNname().equals(name)){
 		    		return true;
 		    	}
@@ -108,12 +112,33 @@ public class ListContainer {
 	}
 	
 	
-	
 	public String[] getListNames(){
-		Log.d("ListContainer", "attempting to get an array: ");
-		Set<String> temp = allLists.keySet();
-		String[] temp2 = (String[])(temp.toArray(new String[temp.size()]));
-		return temp2;
+		ArrayList<String> temp = new ArrayList<String>();
+		
+		for(ListE le : allLists){
+			temp.add(le.name);
+		}
+		
+		return (String[])temp.toArray();
+	}
+	
+	public String toString(){
+		String temp = "All Lists: ";
+		for(String s : getListNames()){
+			temp += s + " ";
+		}
+		
+		return temp;
+	}
+	
+	private class ListE {
+		String name;
+		ItemList list;
+		
+		public ListE(String n, ItemList l){
+			name = n;
+			list = l;
+		}
 	}
 
 }

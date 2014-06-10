@@ -17,7 +17,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="10dp"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
     android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/textView7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dp"
+        android:text="@string/tag_instructions"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <EditText
         android:id="@+id/tagName"
@@ -28,8 +38,6 @@
         android:layout_marginTop="5dp"
         android:ems="10"
         android:textSize="@dimen/margin_large" >
-
-        <requestFocus />
     </EditText>
 
     <LinearLayout
@@ -41,7 +49,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_device_address"
+            android:text="@string/label_battery"
             android:textSize="18sp" />
 
         <Space
@@ -49,7 +57,7 @@
             android:layout_height="wrap_content" />
 
         <TextView
-            android:id="@+id/device_address"
+            android:id="@+id/battery_i"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="18sp" />
@@ -85,22 +93,9 @@
         android:layout_margin="10dp"
         android:orientation="horizontal" >
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/label_data"
-            android:textSize="18sp" />
-
         <Space
             android:layout_width="5dp"
             android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/data_value"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/no_data"
-            android:textSize="18sp" />
     </LinearLayout>
 
     <LinearLayout
@@ -200,7 +195,7 @@
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_close"
+            android:text="@string/label_far"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <View
@@ -213,7 +208,7 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/label_far"
+            android:text="@string/label_close"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
