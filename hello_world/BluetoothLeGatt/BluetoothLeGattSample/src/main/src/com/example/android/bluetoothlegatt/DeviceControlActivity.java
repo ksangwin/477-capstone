@@ -102,6 +102,7 @@ public class DeviceControlActivity extends Activity {
             }
             // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
+            //mBluetoothAdapter.startLeScan(mLeScanCallback);
         }
 
         @Override
@@ -388,6 +389,7 @@ public class DeviceControlActivity extends Activity {
             Log.d(TAG, "Connect request result=" + result);
         }
         mBluetoothAdapter.startLeScan(mLeScanCallback);
+        
     }
 
     @Override
@@ -395,6 +397,8 @@ public class DeviceControlActivity extends Activity {
         super.onPause();
         unregisterReceiver(mGattUpdateReceiver);
         Log.d(TAG, "about to set tag name...");
+        
+        mBluetoothAdapter.stopLeScan(mLeScanCallback);
         
         
         if(canNameTag){
@@ -432,9 +436,11 @@ public class DeviceControlActivity extends Activity {
         switch(item.getItemId()) {
             case R.id.menu_connect:
                 mBluetoothLeService.connect(mDeviceAddress);
+                mBluetoothAdapter.startLeScan(mLeScanCallback);
                 return true;
             case R.id.menu_disconnect:
                 mBluetoothLeService.disconnect();
+                mBluetoothAdapter.stopLeScan(mLeScanCallback);
                 return true;
             case android.R.id.home:
                 onBackPressed();
